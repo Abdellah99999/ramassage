@@ -21,25 +21,18 @@ export async function GET() {
       cache: "no-store"
     });
     
-    if (res.ok) {
-      const data = await res.json();
-      return NextResponse.json(data);
+    if (!res.ok) {
+      if (res.status === 401) {
+        cookieStore.delete("token");
+      }
+      const errData = await res.json().catch(() => ({ detail: "Unauthorized" }));
+      return NextResponse.json(errData, { status: res.status });
     }
-  } catch {
-    // Backend connection offline fallback
+    
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("Auth me route error:", error);
+    return NextResponse.json({ detail: "Backend connection error" }, { status: 502 });
   }
-  
-  const role = token.includes("manager") ? "manager" : token.includes("agent") ? "agent" : "super_admin";
-  const name = role === "super_admin" ? "Super Admin (Mode Démo)" : role === "manager" ? "Manager Casablanca" : "Agent Casablanca";
-  const email = role === "super_admin" ? "admin@hes.com" : role === "manager" ? "manager.casa@hes.com" : "agent.casa@hes.com";
-
-  return NextResponse.json({
-    id: 1,
-    nom: name,
-    email: email,
-    role: role,
-    agence_id: role === "super_admin" ? null : 1,
-    actif: true,
-    agency: role === "super_admin" ? null : { id: 1, nom: "Agence H.E.S. Casablanca", ville: "Casablanca" }
-  });
 }
