@@ -65,18 +65,18 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col justify-center py-12 px-6 sm:px-12 lg:flex-none lg:w-[480px] bg-white border-r border-border z-10">
         <div className="mx-auto w-full max-w-sm lg:w-96">
           {/* Brand header */}
-          <div className="mb-10 text-center lg:text-left">
-            <img src="/logo.png" alt="H.E.S Logo" className="w-16 h-16 mb-4 object-contain mx-auto lg:mx-0" />
-            <h1 className="text-3xl font-title font-bold tracking-wider leading-none text-hes-blue">
+          <div className="mb-10 text-center flex flex-col items-center">
+            <img src="/logo.png" alt="H.E.S Logo" className="w-20 h-20 mb-4 object-contain mx-auto" />
+            <h1 className="text-3xl font-title font-bold tracking-wider leading-none text-hes-blue text-center">
               HORIZON EXPRESS
             </h1>
-            <p className="text-[10px] text-hes-red font-mono font-bold tracking-widest mt-2 uppercase">
+            <p className="text-[10px] text-hes-red font-mono font-bold tracking-widest mt-2 uppercase text-center">
               SERVICES
             </p>
-            <h2 className="mt-8 text-xl font-title font-bold text-foreground tracking-tight uppercase">
+            <h2 className="mt-8 text-xl font-title font-bold text-foreground tracking-tight uppercase text-center">
               CONTRÔLE D'ACCÈS
             </h2>
-            <p className="mt-2 text-xs text-hes-textMuted font-medium">
+            <p className="mt-2 text-xs text-hes-textMuted font-medium text-center">
               Veuillez renseigner vos accès professionnels de tournée
             </p>
           </div>
