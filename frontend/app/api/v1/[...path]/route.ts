@@ -186,16 +186,22 @@ async function handleProxy(
   // 2. Dashboard Stats
   if (path.includes("dashboard/stats")) {
     return NextResponse.json({
-      total_ramassages: 142,
-      total_colis: 856,
-      en_attente: 12,
-      livres: 130,
-      monthly_activity: [
-        { month: "Jan", ramassages: 24, colis: 140 },
-        { month: "Fév", ramassages: 32, colis: 210 },
-        { month: "Mar", ramassages: 28, colis: 175 },
-        { month: "Avr", ramassages: 38, colis: 231 },
-        { month: "Mai", ramassages: 20, colis: 100 }
+      ramassages_jour: 24,
+      ramassages_mois: 142,
+      colis_par_chauffeur: [
+        { driver_name: "Kamel Mansour", ramassages: 8, colis: 48 },
+        { driver_name: "Med Ait Bouchgour", ramassages: 5, colis: 32 },
+        { driver_name: "Fares Ben Salah", ramassages: 4, colis: 26 }
+      ],
+      colis_par_agence: [
+        { agency_name: "Agence H.E.S. Casablanca", colis: 74 },
+        { agency_name: "Agence H.E.S. Marrakech", colis: 42 },
+        { agency_name: "Agence H.E.S. Rabat", colis: 26 }
+      ],
+      top_chauffeurs: [
+        { driver_name: "Kamel Mansour", ramassages: 28, colis: 180 },
+        { driver_name: "Med Ait Bouchgour", ramassages: 21, colis: 135 },
+        { driver_name: "Fares Ben Salah", ramassages: 19, colis: 110 }
       ]
     });
   }

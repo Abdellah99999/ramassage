@@ -35,7 +35,7 @@ export default function DashboardPage() {
     queryFn: () => apiFetch("/api/v1/dashboard/stats"),
   });
 
-    if (isLoading) {
+  if (isLoading) {
     return (
       <div className="p-8 flex flex-col items-center justify-center min-h-[80vh] bg-background">
         <div className="w-10 h-10 rounded-none border border-border border-t-hes-red animate-spin mb-4" />
@@ -56,6 +56,12 @@ export default function DashboardPage() {
     );
   }
 
+  const ramassagesJour = stats.ramassages_jour ?? 0;
+  const ramassagesMois = stats.ramassages_mois ?? 0;
+  const colisParChauffeur = stats.colis_par_chauffeur || [];
+  const colisParAgence = stats.colis_par_agence || [];
+  const topChauffeurs = stats.top_chauffeurs || [];
+
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 bg-background text-foreground">
       {/* Page Header */}
@@ -74,19 +80,19 @@ export default function DashboardPage() {
         {/* Card 1: Colis du Jour */}
         <div className="stat-card">
           <span className="text-[11px] font-mono font-semibold text-hes-textMuted uppercase">Colis collectés / aujourd'hui</span>
-          <p className="text-4xl font-title font-bold text-foreground mt-3">{stats.ramassages_jour}</p>
+          <p className="text-4xl font-title font-bold text-foreground mt-3">{ramassagesJour}</p>
         </div>
 
         {/* Card 2: Colis du Mois */}
         <div className="stat-card">
           <span className="text-[11px] font-mono font-semibold text-hes-textMuted uppercase">Colis collectés / mois</span>
-          <p className="text-4xl font-title font-bold text-foreground mt-3">{stats.ramassages_mois}</p>
+          <p className="text-4xl font-title font-bold text-foreground mt-3">{ramassagesMois}</p>
         </div>
 
         {/* Card 3: Chauffeurs actifs */}
         <div className="stat-card">
           <span className="text-[11px] font-mono font-semibold text-hes-textMuted uppercase">Chauffeurs actifs</span>
-          <p className="text-4xl font-title font-bold text-foreground mt-3">{stats.top_chauffeurs.length}</p>
+          <p className="text-4xl font-title font-bold text-foreground mt-3">{topChauffeurs.length}</p>
         </div>
       </div>
 
@@ -98,7 +104,7 @@ export default function DashboardPage() {
             <Truck className="w-4 h-4 text-hes-red" /> Manifeste — colis par chauffeur
           </h3>
           
-          {stats.colis_par_chauffeur.length === 0 ? (
+          {colisParChauffeur.length === 0 ? (
             <p className="text-xs font-mono text-hes-textMuted text-center py-10">AUCUNE DONNÉE DE TOURNÉE DISPONIBLE</p>
           ) : (
             <div className="overflow-x-auto">
@@ -111,10 +117,10 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
-                  {stats.colis_par_chauffeur.map((item, idx) => (
+                  {colisParChauffeur.map((item, idx) => (
                     <tr key={idx} className="hover:bg-background/20">
                       <td className="py-2.5 text-sm font-semibold text-foreground">{item.driver_name}</td>
-                      <td className="py-2.5 text-right font-mono text-sm text-slate-500">{item.ramassages}</td>
+                      <td className="py-2.5 text-right font-mono text-sm text-slate-500">{item.ramassages ?? 0}</td>
                       <td className="py-2.5 text-right font-mono text-sm font-bold text-foreground">{item.colis}</td>
                     </tr>
                   ))}
@@ -132,7 +138,7 @@ export default function DashboardPage() {
               <MapPin className="w-4 h-4 text-hes-blue" /> RÉPARTITION / COLIS PAR AGENCE
             </h3>
             
-            {stats.colis_par_agence.length === 0 ? (
+            {colisParAgence.length === 0 ? (
               <p className="text-xs font-mono text-hes-textMuted text-center py-10">AUCUNE DONNÉE D'AGENCE DISPONIBLE</p>
             ) : (
               <div className="overflow-x-auto">
@@ -144,7 +150,7 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
-                    {stats.colis_par_agence.map((item, idx) => (
+                    {colisParAgence.map((item, idx) => (
                       <tr key={idx} className="hover:bg-background/20">
                         <td className="py-2.5 text-sm font-semibold text-foreground">{item.agency_name}</td>
                         <td className="py-2.5 text-right font-mono text-sm font-bold text-foreground">{item.colis}</td>
@@ -162,7 +168,7 @@ export default function DashboardPage() {
               <TrendingUp className="w-4 h-4 text-hes-red" /> CLASSEMENT / TOP 5 CHAUFFEURS (MOIS)
             </h3>
             
-            {stats.top_chauffeurs.length === 0 ? (
+            {topChauffeurs.length === 0 ? (
               <p className="text-xs font-mono text-hes-textMuted text-center py-10">AUCUNE DONNÉE DE CLASSEMENT</p>
             ) : (
               <div className="overflow-x-auto">
@@ -175,13 +181,13 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
-                    {stats.top_chauffeurs.map((item, idx) => (
+                    {topChauffeurs.map((item, idx) => (
                       <tr key={idx} className="hover:bg-background/20">
                         <td className="py-2.5 text-sm font-semibold text-foreground">
                           <span className="font-mono text-hes-red font-bold mr-2">0{idx + 1}.</span>
                           {item.driver_name}
                         </td>
-                        <td className="py-2.5 text-right font-mono text-sm text-slate-500">{item.ramassages}</td>
+                        <td className="py-2.5 text-right font-mono text-sm text-slate-500">{item.ramassages ?? 0}</td>
                         <td className="py-2.5 text-right font-mono text-sm font-bold text-hes-red">{item.colis}</td>
                       </tr>
                     ))}
