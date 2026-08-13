@@ -5,6 +5,49 @@ export const dynamic = "force-dynamic";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
 
+// Persistent stateful mock store for offline/demo mode
+let mockPickupSlips: any[] = [
+  {
+    id: 1,
+    numero_bordereau: "BS-20260813-001",
+    date_tournee: "2026-08-13",
+    heure_debut: "08:30:00",
+    heure_fin: "17:00:00",
+    statut: "clôturé",
+    created_at: "2026-08-13T08:30:00",
+    driver: { id: 1, nom: "Kamel Mansour" },
+    agency: { id: 1, nom: "Agence H.E.S. Casablanca" },
+    colis_count: 48,
+    pickups_count: 3,
+    client_name: "Société Maroc Distribution, Electro Casa",
+    numero_declaration: "663300, 663307, 663314",
+    pickups: [
+      { id: 1, pickup_slip_id: 1, numero_declaration: "663300", client_nom: "Société Maroc Distribution", client_telephone: "+212 664 778 899", adresse: "Avenue Agdal", ville: "Rabat", nombre_colis: 18, date: "2026-08-13", heure: "09:30", observations: "Ramassage conforme" },
+      { id: 2, pickup_slip_id: 1, numero_declaration: "663307", client_nom: "Electro Casa", client_telephone: "+212 667 334 455", adresse: "Derb Omar", ville: "Casablanca", nombre_colis: 15, date: "2026-08-13", heure: "11:15", observations: "Ramassage conforme" },
+      { id: 3, pickup_slip_id: 1, numero_declaration: "663314", client_nom: "Fatima Zahra Mansouri", client_telephone: "+212 663 551 122", adresse: "15 Blvd Anfa", ville: "Casablanca", nombre_colis: 15, date: "2026-08-13", heure: "14:40", observations: "Ramassage conforme" }
+    ]
+  },
+  {
+    id: 2,
+    numero_bordereau: "BS-20260813-002",
+    date_tournee: "2026-08-13",
+    heure_debut: "09:00:00",
+    heure_fin: null,
+    statut: "ouvert",
+    created_at: "2026-08-13T09:00:00",
+    driver: { id: 2, nom: "Med Ait Bouchgour" },
+    agency: { id: 2, nom: "Agence H.E.S. Marrakech" },
+    colis_count: 22,
+    pickups_count: 2,
+    client_name: "Ahmed Jaremi, Boutique Oasis",
+    numero_declaration: "663321, 663328",
+    pickups: [
+      { id: 4, pickup_slip_id: 2, numero_declaration: "663321", client_nom: "Ahmed Jaremi", client_telephone: "+212 661 663 322", adresse: "Gueliz", ville: "Marrakech", nombre_colis: 12, date: "2026-08-13", heure: "10:00", observations: "Conforme" },
+      { id: 5, pickup_slip_id: 2, numero_declaration: "663328", client_nom: "Boutique Oasis", client_telephone: "+212 665 112 233", adresse: "Sidi Ghanem", ville: "Marrakech", nombre_colis: 10, date: "2026-08-13", heure: "12:30", observations: "Conforme" }
+    ]
+  }
+];
+
 async function handleProxy(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> }
@@ -52,7 +95,83 @@ async function handleProxy(
 
   // --- DEMO / MOCK FALLBACK DATA ---
   
-  // 1. PDF / Print Bordereau Fallback
+  // 1. Create Pickup Slip (POST /pickup-slips)
+  if (request.method === "POST" && path === "pickup-slips") {
+    try {
+      const payload = await request.json();
+      
+      const driversList = [
+        { id: 1, nom: "Kamel Mansour" },
+        { id: 2, nom: "Med Ait Bouchgour" },
+        { id: 3, nom: "Fares Ben Salah" },
+        { id: 4, nom: "Youssef Naciri" },
+        { id: 5, nom: "Rachid Alaoui" }
+      ];
+      const agenceList = [
+        { id: 1, nom: "Agence H.E.S. Casablanca" },
+        { id: 2, nom: "Agence H.E.S. Marrakech" },
+        { id: 3, nom: "Agence H.E.S. Rabat" }
+      ];
+
+      const driverObj = driversList.find(d => d.id === payload.driver_id) || driversList[0];
+      const agencyObj = agenceList.find(a => a.id === payload.agency_id) || agenceList[0];
+
+      const pickups = (payload.pickups || []).map((p: any, idx: number) => ({
+        id: Date.now() + idx,
+        numero_declaration: p.numero_declaration || `BL-${Date.now()}`,
+        client_nom: p.client_nom || "Client",
+        client_telephone: p.client_telephone || null,
+        adresse: p.adresse || "-",
+        ville: p.ville || agencyObj.nom,
+        nombre_colis: p.nombre_colis || 1,
+        date: p.date || payload.date_tournee,
+        heure: p.heure || "12:00",
+        observations: p.observations || null
+      }));
+
+      const colis_count = pickups.reduce((sum: number, p: any) => sum + (p.nombre_colis || 0), 0);
+      const client_name = pickups.map((p: any) => p.client_nom).join(", ");
+      const numero_declaration = pickups.map((p: any) => p.numero_declaration).join(", ");
+      
+      const nextId = mockPickupSlips.length + 1;
+      const dateStr = (payload.date_tournee || "20260813").replace(/-/g, "");
+      const code = `BS-${dateStr}-${String(nextId).padStart(3, '0')}`;
+
+      const newSlip = {
+        id: Date.now(),
+        numero_bordereau: code,
+        date_tournee: payload.date_tournee || "2026-08-13",
+        heure_debut: payload.heure_debut || "09:00:00",
+        heure_fin: null,
+        statut: "ouvert",
+        created_at: new Date().toISOString(),
+        driver: driverObj,
+        agency: agencyObj,
+        colis_count: colis_count,
+        pickups_count: pickups.length,
+        client_name: client_name,
+        numero_declaration: numero_declaration,
+        pickups: pickups
+      };
+
+      mockPickupSlips.unshift(newSlip);
+      return NextResponse.json(newSlip, { status: 201 });
+    } catch (e: any) {
+      console.error("Create slip mock error:", e);
+    }
+  }
+
+  // 2. Delete Pickup Slip (DELETE /pickup-slips/:id)
+  if (request.method === "DELETE" && path.match(/pickup-slips\/\d+$/)) {
+    const slipIdStr = path.split("/").pop();
+    if (slipIdStr) {
+      const targetId = parseInt(slipIdStr);
+      mockPickupSlips = mockPickupSlips.filter(s => s.id !== targetId);
+    }
+    return NextResponse.json({ success: true });
+  }
+
+  // 3. PDF / Print Bordereau Fallback
   if (path.includes("print") || path.endsWith("/pdf")) {
     const searchParams = request.nextUrl.searchParams;
     const driverId = searchParams.get("driver_id") || "1";
@@ -179,11 +298,14 @@ async function handleProxy(
     });
   }
 
-  // 2. Dashboard Stats
+  // 4. Dashboard Stats
   if (path.includes("dashboard/stats")) {
+    const totalRamassages = mockPickupSlips.reduce((sum, s) => sum + (s.pickups_count || 0), 0);
+    const totalColis = mockPickupSlips.reduce((sum, s) => sum + (s.colis_count || 0), 0);
+
     return NextResponse.json({
-      ramassages_jour: 24,
-      ramassages_mois: 142,
+      ramassages_jour: totalRamassages,
+      ramassages_mois: totalColis,
       colis_par_chauffeur: [
         { driver_name: "Kamel Mansour", ramassages: 8, colis: 48 },
         { driver_name: "Med Ait Bouchgour", ramassages: 5, colis: 32 },
@@ -202,7 +324,7 @@ async function handleProxy(
     });
   }
 
-  // 3. Drivers List
+  // 5. Drivers List
   if (path.includes("drivers")) {
     return NextResponse.json([
       { id: 1, nom: "Kamel Mansour", telephone: "+212 661 01 09", agence_id: 1, actif: true, agency: { id: 1, nom: "Agence H.E.S. Casablanca" } },
@@ -213,7 +335,7 @@ async function handleProxy(
     ]);
   }
 
-  // 4. Agencies List
+  // 6. Agencies List
   if (path.includes("agences")) {
     return NextResponse.json([
       { id: 1, nom: "Agence H.E.S. Casablanca", adresse: "120 Blvd Anfa, Casablanca", telephone: "+212 522 123 456", responsable: "Hamza Al-Amri", actif: true },
@@ -222,7 +344,7 @@ async function handleProxy(
     ]);
   }
 
-  // 5. Users List
+  // 7. Users List
   if (path.includes("users")) {
     return NextResponse.json([
       { id: 1, nom: "Super Admin", email: "admin@hes.com", role: "super_admin", agence_id: null, actif: true },
@@ -231,75 +353,45 @@ async function handleProxy(
     ]);
   }
 
-  // 6. Search Pickups
+  // 8. Search Pickups
   if (path.includes("pickups/search")) {
+    const allPickups: any[] = [];
+    mockPickupSlips.forEach(s => {
+      (s.pickups || []).forEach((p: any) => {
+        allPickups.push({
+          ...p,
+          driver_nom: s.driver?.nom || "-",
+          agency_nom: s.agency?.nom || "-"
+        });
+      });
+    });
     return NextResponse.json({
-      items: [
-        { id: 1, pickup_slip_id: 1, numero_declaration: "663300", client_nom: "Société Maroc Distribution", client_telephone: "+212 664 778 899", adresse: "Avenue Agdal", ville: "Rabat", nombre_colis: 18, date: "2026-08-13", heure: "09:30", observations: "Ramassage conforme", driver_nom: "Kamel Mansour", agency_nom: "Agence H.E.S. Casablanca" },
-        { id: 2, pickup_slip_id: 1, numero_declaration: "663307", client_nom: "Electro Casa", client_telephone: "+212 667 334 455", adresse: "Derb Omar", ville: "Casablanca", nombre_colis: 15, date: "2026-08-13", heure: "11:15", observations: "Ramassage conforme", driver_nom: "Kamel Mansour", agency_nom: "Agence H.E.S. Casablanca" }
-      ],
-      total: 2
+      items: allPickups,
+      total: allPickups.length
     });
   }
 
-  // 7. Detailed Pickup Slip (/pickup-slips/:id)
+  // 9. Detailed Pickup Slip (/pickup-slips/:id)
   if (path.match(/pickup-slips\/\d+$/)) {
-    return NextResponse.json({
-      id: 1,
-      numero_bordereau: "BS-20260813-001",
-      date_tournee: "2026-08-13",
-      heure_debut: "08:30:00",
-      heure_fin: "17:00:00",
-      statut: "clôturé",
-      created_at: "2026-08-13T08:30:00",
-      driver: { id: 1, nom: "Kamel Mansour" },
-      agency: { id: 1, nom: "Agence H.E.S. Casablanca" },
-      pickups: [
-        { id: 1, pickup_slip_id: 1, numero_declaration: "663300", client_nom: "Société Maroc Distribution", client_telephone: "+212 664 778 899", adresse: "Avenue Agdal", ville: "Rabat", nombre_colis: 18, date: "2026-08-13", heure: "09:30", observations: "Ramassage conforme" },
-        { id: 2, pickup_slip_id: 1, numero_declaration: "663307", client_nom: "Electro Casa", client_telephone: "+212 667 334 455", adresse: "Derb Omar", ville: "Casablanca", nombre_colis: 15, date: "2026-08-13", heure: "11:15", observations: "Ramassage conforme" }
-      ]
-    });
+    const slipIdStr = path.split("/").pop();
+    const targetId = slipIdStr ? parseInt(slipIdStr) : null;
+    const found = mockPickupSlips.find(s => s.id === targetId) || mockPickupSlips[0];
+    return NextResponse.json(found);
   }
 
-  // 8. Pickup Slips List
+  // 10. Pickup Slips List (GET /pickup-slips)
+  const totalRamassages = mockPickupSlips.reduce((sum, s) => sum + (s.pickups_count || 0), 0);
+  const totalColis = mockPickupSlips.reduce((sum, s) => sum + (s.colis_count || 0), 0);
+  const enAttente = mockPickupSlips.filter(s => s.statut === "ouvert").length;
+  const livres = mockPickupSlips.filter(s => s.statut === "clôturé").length;
+
   return NextResponse.json({
-    items: [
-      {
-        id: 1,
-        numero_bordereau: "BS-20260813-001",
-        date_tournee: "2026-08-13",
-        heure_debut: "08:30:00",
-        heure_fin: "17:00:00",
-        statut: "clôturé",
-        created_at: "2026-08-13T08:30:00",
-        driver: { id: 1, nom: "Kamel Mansour" },
-        agency: { id: 1, nom: "Agence H.E.S. Casablanca" },
-        colis_count: 48,
-        pickups_count: 3,
-        client_name: "Société Maroc Distribution, Electro Casa",
-        numero_declaration: "663300, 663307, 663314"
-      },
-      {
-        id: 2,
-        numero_bordereau: "BS-20260813-002",
-        date_tournee: "2026-08-13",
-        heure_debut: "09:00:00",
-        heure_fin: null,
-        statut: "ouvert",
-        created_at: "2026-08-13T09:00:00",
-        driver: { id: 2, nom: "Med Ait Bouchgour" },
-        agency: { id: 2, nom: "Agence H.E.S. Marrakech" },
-        colis_count: 22,
-        pickups_count: 2,
-        client_name: "Ahmed Jaremi, Boutique Oasis",
-        numero_declaration: "663321, 663328"
-      }
-    ],
-    total: 2,
-    total_ramassages: 5,
-    total_colis: 70,
-    en_attente: 1,
-    livres: 1
+    items: mockPickupSlips,
+    total: mockPickupSlips.length,
+    total_ramassages: totalRamassages,
+    total_colis: totalColis,
+    en_attente: enAttente,
+    livres: livres
   });
 }
 
