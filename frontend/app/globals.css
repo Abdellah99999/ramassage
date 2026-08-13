@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #F8FAFC; /* page background */
+    --foreground: #172033; /* primary text */
+    --card: #FFFFFF; /* card background */
+    --card-foreground: #172033;
+    --popover: #FFFFFF;
+    --popover-foreground: #172033;
+    --primary: #2563EB; /* modern blue */
+    --primary-foreground: #FFFFFF;
+    --secondary: #F1F5F9; /* very light gray */
+    --secondary-foreground: #64748B;
+    --muted: #F1F5F9;
+    --muted-foreground: #64748B; /* secondary text */
+    --accent: #2563EB;
+    --accent-foreground: #FFFFFF;
+    --destructive: #DC2626; /* red for errors */
+    --destructive-foreground: #FFFFFF;
+    --success: #16A34A; /* green success */
+    --success-foreground: #FFFFFF;
+    --border: #E5E7EB; /* thin border */
+    --input: #E5E7EB;
+    --ring: #2563EB;
+    --radius: 12px;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+/* Custom Signature Elements */
+
+.hes-ribbon {
+  height: 4px;
+  width: 100%;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--primary),
+    var(--primary) 10px,
+    var(--accent) 10px,
+    var(--accent) 20px
+  );
+  border: none;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.hes-stamp {
+  display: inline-block;
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.15rem 0.6rem;
+  border: 1px dashed currentColor;
+  transform: rotate(-2deg);
+  background: var(--card);
+}
+
+/* Layout and Component Utilities */
+@layer components {
+  .card {
+    @apply bg-white border border-border rounded-xl shadow-sm p-6;
+  }
+
+  .stat-card {
+    @apply bg-white border border-border rounded-lg p-4 flex flex-col items-start gap-2;
+  }
+
+  .primary-btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md font-title font-semibold text-sm shadow-sm transition;
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  .table-header th {
+    @apply text-[11px] font-semibold uppercase text-muted-foreground tracking-widest py-3 px-4 border-r border-border;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-mono font-semibold;
+  }
+}
+
+@layer utilities {
+  .text-foreground { color: var(--foreground); }
+  .text-hes-textMuted, .text-muted-foreground { color: var(--muted-foreground); }
+  .bg-card { background: var(--card); }
+  .border-border { border-color: var(--border); }
+  .bg-hes-blue { background-color: var(--primary); }
+  .text-hes-blue, .text-primary { color: var(--primary); }
+  .text-hes-red { color: var(--destructive); }
+  .bg-hes-red { background-color: var(--destructive); }
+  .text-hes-green { color: var(--success); }
+  .bg-hes-green { background-color: var(--success); }
+  .border-l-hes-red { border-left-color: var(--destructive); }
+  .border-l-hes-blue { border-left-color: var(--primary); }
+}
+
+/* Modal open global blur helpers */
+/* When `.modal-open` is added to <html>, apply a subtle blur to the page while
+   keeping the modal and its descendants sharp. This selector excludes the
+   modal root and any of its descendant elements so the modal won't be blurred
+   even if it's nested inside other wrappers. */
+/* When modal is open we keep page interactions disabled by overflow control
+   and provide a small top blur overlay via body::before. Avoid globally
+   disabling filters so the top blur overlay is visible. */
+
+/* A marker to ensure the modal overlay/root is not blurred */
+.modal-root {
+  filter: none !important;
+  pointer-events: auto !important;
+  z-index: 9999;
+}
+
+/* Small top blur overlay when modal is open: covers a thin strip at the top */
+.modal-open body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px; /* adjust to match header height */
+  pointer-events: none;
+  z-index: 9998;
+  background: rgba(255,255,255,0.25);
+  -webkit-backdrop-filter: blur(6px) saturate(0.92);
+  backdrop-filter: blur(6px) saturate(0.92);
+}
