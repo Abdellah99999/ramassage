@@ -244,13 +244,12 @@ def _generate_pdf_sync(pickups, driver, date_debut, date_fin, slip_code: Optiona
     story.append(Spacer(1, 15))
     
     # --- PICKUPS TABLE ---
-    # Headers: N° BL / Client / Ville / Date / Heure / Colis
+    # Headers: N° BL / Client / Ville / Date / Colis
     table_data = [[
         Paragraph("N° BL", table_header_style),
         Paragraph("Client", table_header_style),
         Paragraph("Ville", table_header_style),
         Paragraph("Date", table_header_style),
-        Paragraph("Heure", table_header_style),
         Paragraph("Colis", table_header_style),
     ]]
     
@@ -263,11 +262,10 @@ def _generate_pdf_sync(pickups, driver, date_debut, date_fin, slip_code: Optiona
             Paragraph(pk.client_nom or "N/A", table_cell_style),
             Paragraph(ville_text or "N/A", table_cell_style),
             Paragraph(pk.date.strftime("%d/%m/%Y") if pk.date else "N/A", table_cell_style),
-            Paragraph(pk.heure.strftime("%H:%M") if pk.heure else "N/A", table_cell_style),
             Paragraph(str(pk.nombre_colis), table_cell_style),
         ])
         
-    col_widths = [100, 150, 110, 75, 45, 43]
+    col_widths = [105, 180, 120, 75, 43]
     pickups_table = Table(table_data, colWidths=col_widths, repeatRows=1)
     
     t_style = [

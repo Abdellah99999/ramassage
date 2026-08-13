@@ -68,36 +68,28 @@ async function handleProxy(
 <meta charset="utf-8">
 <title>Bordereau H.E.S. - ${driverName}</title>
 <style>
+  @page { size: A4; margin: 15mm; }
   body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; padding: 40px; margin: 0; background: #fff; }
-  .header { display: flex; align-items: center; gap: 20px; border-bottom: 3px solid #dc143c; padding-bottom: 15px; margin-bottom: 20px; }
-  .logo { width: 65px; height: 65px; object-fit: contain; }
-  .title { color: #0047ab; font-size: 22px; font-weight: bold; margin: 0; }
-  .subtitle { color: #dc143c; font-size: 12px; font-weight: bold; margin-top: 4px; letter-spacing: 1px; }
-  .meta-table { width: 100%; margin-bottom: 25px; font-size: 13px; border-collapse: collapse; }
-  .meta-table td { padding: 6px 0; }
+  .header { display: flex; align-items: center; gap: 20px; border-bottom: 3px solid #dc143c; padding-bottom: 12px; margin-bottom: 20px; }
+  .logo { width: 60px; height: 60px; object-fit: contain; }
+  .title { color: #0047ab; font-size: 20px; font-weight: bold; margin: 0; }
+  .subtitle { color: #dc143c; font-size: 11px; font-weight: bold; margin-top: 3px; letter-spacing: 1px; }
+  .meta-table { width: 100%; margin-bottom: 25px; font-size: 12px; border-collapse: collapse; }
+  .meta-table td { padding: 5px 0; }
   .pickups-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
-  .pickups-table th { background: #0047ab; color: white; text-align: left; padding: 10px; font-weight: bold; }
-  .pickups-table td { border-bottom: 1px solid #cbd5e1; padding: 9px 10px; }
+  .pickups-table th { background: #0047ab; color: white; text-align: left; padding: 8px 10px; font-weight: bold; }
+  .pickups-table td { border-bottom: 1px solid #cbd5e1; padding: 8px 10px; }
   .pickups-table tr:nth-child(even) { background: #f8fafc; }
-  .summary-box { float: right; background: #fef3c7; border: 1px solid #fde68a; padding: 12px 18px; width: 230px; margin-bottom: 40px; font-size: 13px; font-weight: bold; border-radius: 4px; }
+  .summary-box { float: right; background: #fef3c7; border: 1px solid #fde68a; padding: 10px 16px; width: 220px; margin-bottom: 40px; font-size: 12px; font-weight: bold; border-radius: 4px; }
   .summary-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-  .summary-row:last-child { margin-bottom: 0; color: #0047ab; font-size: 14px; }
-  .signatures { margin-top: 80px; clear: both; display: flex; justify-content: space-between; gap: 30px; }
-  .sig-box { flex: 1; border: 1px solid #cbd5e1; height: 110px; padding: 12px; border-radius: 4px; }
-  .sig-title { font-weight: bold; font-size: 12px; color: #0047ab; }
+  .summary-row:last-child { margin-bottom: 0; color: #0047ab; font-size: 13px; }
+  .signatures { margin-top: 60px; clear: both; display: flex; justify-content: space-between; gap: 30px; }
+  .sig-box { flex: 1; border: 1px solid #cbd5e1; height: 100px; padding: 10px; border-radius: 4px; }
+  .sig-title { font-weight: bold; font-size: 11px; color: #0047ab; }
   .sig-sub { font-size: 10px; color: #64748b; margin-top: 4px; }
-  @media print {
-    body { padding: 20px; }
-    .no-print { display: none !important; }
-  }
 </style>
 </head>
 <body>
-  <div class="no-print" style="background: #0047ab; color: white; padding: 12px 20px; text-align: center; font-weight: bold; border-radius: 6px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
-    <span>📄 Bordereau Récapitulatif H.E.S. (Chauffeur: ${driverName})</span>
-    <button onclick="window.print()" style="background: #dc143c; color: white; border: none; padding: 8px 18px; font-weight: bold; border-radius: 4px; cursor: pointer;">🖨️ Imprimer / Sauvegarder PDF</button>
-  </div>
-
   <div class="header">
     <img src="/logo.png" class="logo" alt="HES Logo">
     <div>
@@ -124,7 +116,6 @@ async function handleProxy(
         <th>Client</th>
         <th>Ville</th>
         <th>Date</th>
-        <th>Heure</th>
         <th>Colis</th>
       </tr>
     </thead>
@@ -134,7 +125,6 @@ async function handleProxy(
         <td>Société Maroc Distribution</td>
         <td>Casablanca</td>
         <td>13/08/2026</td>
-        <td>09:30</td>
         <td><b>18</b></td>
       </tr>
       <tr>
@@ -142,7 +132,6 @@ async function handleProxy(
         <td>Electro Casa</td>
         <td>Casablanca</td>
         <td>13/08/2026</td>
-        <td>11:15</td>
         <td><b>15</b></td>
       </tr>
       <tr>
@@ -150,7 +139,6 @@ async function handleProxy(
         <td>Fatima Zahra Mansouri</td>
         <td>Casablanca</td>
         <td>13/08/2026</td>
-        <td>14:40</td>
         <td><b>15</b></td>
       </tr>
     </tbody>
@@ -171,6 +159,14 @@ async function handleProxy(
       <div class="sig-sub">Émargement et accord chauffeur</div>
     </div>
   </div>
+
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+      }, 250);
+    };
+  </script>
 </body>
 </html>`;
 
