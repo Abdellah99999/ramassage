@@ -138,6 +138,30 @@ export default function ImpressionPage() {
             />
           </div>
         </div>
+
+        {/* Action Buttons Grid */}
+        <div className="flex flex-wrap items-center gap-4 mt-6 pt-5 border-t border-border">
+          <button
+            type="button"
+            onClick={() => {
+              const url = `/api/v1/pickup-slips/print?driver_id=${driverId}&date_debut=${dateDebut}&date_fin=${dateFin}`;
+              window.open(url, "_blank");
+            }}
+            className="px-5 py-2.5 border border-border rounded-md bg-white text-hes-blue font-title font-semibold text-sm flex items-center gap-2 hover:bg-slate-50 transition cursor-pointer shadow-sm"
+          >
+            <FileText className="w-4 h-4" />
+            <span>Aperçu (Nouvel Onglet)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="primary-btn px-5 py-2.5 rounded-md flex items-center gap-2 shadow-md cursor-pointer hover:opacity-95"
+          >
+            <Printer className="w-4 h-4" />
+            <span>Télécharger / Imprimer (PDF / A4)</span>
+          </button>
+        </div>
       </div>
 
       {/* --- LIVE PRINTABLE MANIFEST SHEET (Visible on screen and printed on A4) --- */}
