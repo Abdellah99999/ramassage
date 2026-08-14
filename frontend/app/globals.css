@@ -106,32 +106,50 @@
 }
 
 /* Modal open global blur helpers */
-/* When `.modal-open` is added to <html>, apply a subtle blur to the page while
-   keeping the modal and its descendants sharp. This selector excludes the
-   modal root and any of its descendant elements so the modal won't be blurred
-   even if it's nested inside other wrappers. */
-/* When modal is open we keep page interactions disabled by overflow control
-   and provide a small top blur overlay via body::before. Avoid globally
-   disabling filters so the top blur overlay is visible. */
-
-/* A marker to ensure the modal overlay/root is not blurred */
 .modal-root {
   filter: none !important;
   pointer-events: auto !important;
   z-index: 9999;
 }
 
-/* Small top blur overlay when modal is open: covers a thin strip at the top */
 .modal-open body::before {
   content: "";
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 56px; /* adjust to match header height */
+  height: 56px;
   pointer-events: none;
   z-index: 9998;
   background: rgba(255,255,255,0.25);
   -webkit-backdrop-filter: blur(6px) saturate(0.92);
   backdrop-filter: blur(6px) saturate(0.92);
+}
+
+/* Print Specific Styles for A4 Manifests */
+@media print {
+  aside, .no-print {
+    display: none !important;
+  }
+  
+  body, main {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-break-inside {
+    break-inside: avoid;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
