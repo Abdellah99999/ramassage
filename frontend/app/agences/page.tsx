@@ -41,22 +41,8 @@ export default function AgencesPage() {
 
   // Queries
   const { data: agencies = [], isLoading, error } = useQuery<AgencyItem[]>({
-    queryKey: ["agencies-page", currentUser?.role],
-    queryFn: async () => {
-      if (currentUser?.role === "super_admin") {
-        return await apiFetch<AgencyItem[]>("/api/v1/agences-crud");
-      } else {
-        const list = await apiFetch<any[]>("/api/v1/pickup-slips/agences");
-        return list.map((a: any) => ({
-          id: a.id,
-          nom: a.nom,
-          adresse: a.adresse || null,
-          telephone: a.telephone || null,
-          responsable: a.responsable || null,
-          actif: a.actif ?? true,
-        }));
-      }
-    },
+    queryKey: ["agencies-crud"],
+    queryFn: () => apiFetch("/api/v1/agences-crud"),
     enabled: !!currentUser,
   });
 
@@ -168,12 +154,10 @@ export default function AgencesPage() {
               : "Consultation du répertoire des agences régionales H.E.S."}
           </p>
         </div>
-        {currentUser?.role === "super_admin" && (
-          <button onClick={openCreateModal} className="primary-btn rounded-md">
-            <Plus className="w-4 h-4" />
-            <span>Créer une agence</span>
-          </button>
-        )}
+        <button onClick={openCreateModal} className="primary-btn rounded-md">
+          <Plus className="w-4 h-4" />
+          <span>Créer une agence</span>
+        </button>
       </div>
 
       <div className="hes-ribbon mt-2 mb-6" />
@@ -223,18 +207,14 @@ export default function AgencesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right align-middle">
-                      {currentUser?.role === "super_admin" ? (
-                        <div className="flex justify-end gap-3.5">
-                          <button onClick={() => openEditModal(a)} className="p-2 border border-border bg-white hover:bg-slate-50 transition rounded-md text-slate-700" title="Modifier">
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => handleDelete(a.id, a.nom)} className="p-2 border border-hes-red/30 bg-white hover:bg-hes-red/10 transition rounded-md text-hes-red" title="Supprimer">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-hes-textMuted font-mono">Lecture seule</span>
-                      )}
+                      <div className="flex justify-end gap-3.5">
+                        <button onClick={() => openEditModal(a)} className="p-2 border border-border bg-white hover:bg-slate-50 transition rounded-md text-slate-700" title="Modifier">
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDelete(a.id, a.nom)} className="p-2 border border-hes-red/30 bg-white hover:bg-hes-red/10 transition rounded-md text-hes-red" title="Supprimer">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

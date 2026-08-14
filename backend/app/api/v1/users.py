@@ -14,7 +14,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 @router.get("", response_model=List[UserRead])
 async def list_users(
-    current_user: User = Depends(RoleChecker(["super_admin", "manager"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     db: AsyncSession = Depends(get_db)
 ):
     query = select(User).options(selectinload(User.agency))
@@ -29,7 +29,7 @@ async def list_users(
 @router.post("", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def create_user(
     payload: UserCreate,
-    current_user: User = Depends(RoleChecker(["super_admin", "manager"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     db: AsyncSession = Depends(get_db)
 ):
     # Validate manager restrictions
@@ -73,7 +73,7 @@ async def create_user(
 @router.get("/{user_id}", response_model=UserRead)
 async def get_user_detail(
     user_id: int,
-    current_user: User = Depends(RoleChecker(["super_admin", "manager"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(User).options(selectinload(User.agency)).where(User.id == user_id))
@@ -94,7 +94,7 @@ async def get_user_detail(
 async def update_user(
     user_id: int,
     payload: UserUpdate,
-    current_user: User = Depends(RoleChecker(["super_admin", "manager"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(User).options(selectinload(User.agency)).where(User.id == user_id))
@@ -151,7 +151,7 @@ async def update_user(
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: int,
-    current_user: User = Depends(RoleChecker(["super_admin", "manager"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(User).where(User.id == user_id))

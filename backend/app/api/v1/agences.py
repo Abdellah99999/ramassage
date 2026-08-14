@@ -13,7 +13,7 @@ router = APIRouter(prefix="/agences-crud", tags=["Agences CRUD"])
 
 @router.get("", response_model=List[AgencyRead])
 async def list_agencies_crud(
-    current_user: User = Depends(RoleChecker(["super_admin"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     db: AsyncSession = Depends(get_db)
 ):
     query = select(Agency)
@@ -23,7 +23,7 @@ async def list_agencies_crud(
 @router.post("", response_model=AgencyRead, status_code=status.HTTP_201_CREATED)
 async def create_agency(
     payload: AgencyCreate,
-    current_user: User = Depends(RoleChecker(["super_admin"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     db: AsyncSession = Depends(get_db)
 ):
     db_agency = Agency(
@@ -42,7 +42,7 @@ async def create_agency(
 async def update_agency(
     agency_id: int,
     payload: AgencyUpdate,
-    current_user: User = Depends(RoleChecker(["super_admin"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(Agency).where(Agency.id == agency_id))
@@ -68,7 +68,7 @@ async def update_agency(
 @router.delete("/{agency_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_agency(
     agency_id: int,
-    current_user: User = Depends(RoleChecker(["super_admin"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(Agency).where(Agency.id == agency_id))

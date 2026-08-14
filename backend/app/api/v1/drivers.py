@@ -15,7 +15,7 @@ router = APIRouter(prefix="/drivers-crud", tags=["Chauffeurs CRUD"])
 
 @router.get("", response_model=List[DriverRead])
 async def list_drivers_crud(
-    current_user: User = Depends(RoleChecker(["super_admin", "manager"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     agence_id_filter: Optional[int] = Depends(get_user_agency_filter),
     db: AsyncSession = Depends(get_db)
 ):
@@ -28,7 +28,7 @@ async def list_drivers_crud(
 @router.post("", response_model=DriverRead, status_code=status.HTTP_201_CREATED)
 async def create_driver(
     payload: DriverCreate,
-    current_user: User = Depends(RoleChecker(["super_admin", "manager"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     agence_id_filter: Optional[int] = Depends(get_user_agency_filter),
     db: AsyncSession = Depends(get_db)
 ):
@@ -58,7 +58,7 @@ async def create_driver(
 async def update_driver(
     driver_id: int,
     payload: DriverUpdate,
-    current_user: User = Depends(RoleChecker(["super_admin", "manager"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     agence_id_filter: Optional[int] = Depends(get_user_agency_filter),
     db: AsyncSession = Depends(get_db)
 ):
@@ -105,7 +105,7 @@ async def update_driver(
 @router.delete("/{driver_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_driver(
     driver_id: int,
-    current_user: User = Depends(RoleChecker(["super_admin", "manager"])),
+    current_user: User = Depends(RoleChecker(["super_admin", "manager", "agent"])),
     agence_id_filter: Optional[int] = Depends(get_user_agency_filter),
     db: AsyncSession = Depends(get_db)
 ):

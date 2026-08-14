@@ -11,7 +11,7 @@ from app.models.pickup_slip import PickupSlip
 from app.models.pickup import Pickup
 
 async def seed_data():
-    print("Début de la création des comptes de test et agences (données propres)...")
+    print("Début de la création des données de démonstration complètes (Agences, Utilisateurs, Chauffeurs, Bordereaux, Colis)...")
     async with SessionLocal() as session:
         async with session.begin():
             # 1. Nettoyer les anciennes données
@@ -68,11 +68,77 @@ async def seed_data():
                 ("Tariq Zaidi", tanger_agency.id),
                 ("Amine Chraibi", agadir_agency.id),
             ]
+            created_drivers = []
             for i, (nom, ag_id) in enumerate(drivers_list, 1):
                 d = Driver(nom=nom, telephone=f"+212 661 {i:02d}0 {i:02d}9", agence_id=ag_id, actif=True)
                 session.add(d)
+                created_drivers.append(d)
+            await session.flush()
+
+            # 5. Créer des Bordereaux et Colis fictifs
+            clients_sample = [
+                ("Maroc Telecom", "Avenue Annakhil, Rabat", "Rabat"),
+                ("Electroplanet Anfa", "Bd d'Anfa, Casablanca", "Casablanca"),
+                ("Marjane Menara", "Avenue Guemassa, Marrakech", "Marrakech"),
+                ("Kitea City Tanger", "Route de Tétouan, Tanger", "Tanger"),
+                ("BIM Stores Agadir", "Zone Industrielle Tassila, Agadir", "Agadir"),
+                ("LabelVie Express", "Route d'El Jadida, Casablanca", "Casablanca"),
+                ("Sothema Pharma", "Bouskoura Industrial Zone, Casablanca", "Casablanca"),
+                ("Decathlon Gueliz", "Avenue Abdelkrim El Khattabi, Marrakech", "Marrakech"),
+            ]
+
+            today = date.today()
+            slip_count = 1
+            bl_counter = 1001
+
+            for day_offset in range(10, -1, -1):
+                tour_date = today - timedelta(days=day_offset)
                 
-            print("Agences, utilisateurs de test et chauffeurs créés (0 bordereaux).")
+                # Pick 2-3 drivers for this tour date
+                active_drivers_for_day = random.sample(created_drivers, k=random.randint(2, 4))
+                
+                for driver in active_drivers_for_day:
+                    num_slip = f"BS-{tour_date.strftime('%Y%m%d')}-{slip_count:03d}"
+                    slip_count += 1
+                    
+                    is_closed = (day_offset > 1) # Close older slips
+                    status_str = "clôturé" if is_closed else "en_cours"
+                    start_t = time(hour=random.randint(7, 9), minute=random.choice([0, 15, 30, 45]))
+                    end_t = time(hour=random.randint(16, 18), minute=random.choice([0, 15, 30])) if is_closed else None
+                    
+                    slip = PickupSlip(
+                        numero_bordereau=num_slip,
+                        driver_id=driver.id,
+                        agency_id=driver.agence_id,
+                        date_tournee=tour_date,
+                        heure_debut=start_t,
+                        heure_fin=end_t,
+                        statut=status_str,
+                        created_by=users_data[0].id
+                    )
+                    session.add(slip)
+                    await session.flush()
+
+                    # Add 2 to 5 pickups for each slip
+                    num_pickups = random.randint(2, 5)
+                    for _ in range(num_pickups):
+                        client_nom, adresse, ville = random.choice(clients_sample)
+                        pickup = Pickup(
+                            pickup_slip_id=slip.id,
+                            numero_declaration=str(bl_counter),
+                            client_nom=client_nom,
+                            client_telephone=f"+212 6{random.randint(10000000, 99999999)}",
+                            adresse=adresse,
+                            ville=ville,
+                            nombre_colis=random.randint(1, 8),
+                            date=tour_date,
+                            heure=time(hour=random.randint(9, 16), minute=random.choice([0, 15, 30, 45])),
+                            observations=random.choice(["Colis prioritaires", "Fragile - Manipuler avec soin", "Livraison express", None, None])
+                        )
+                        bl_counter += 1
+                        session.add(pickup)
+
+            print("Données de test complètes (Agences, Utilisateurs, Chauffeurs, Bordereaux, Colis) générées avec succès !")
 
     print("Initialisation des données de test terminée avec succès !")
 
@@ -84,4 +150,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
