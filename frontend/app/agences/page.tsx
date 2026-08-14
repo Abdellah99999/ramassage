@@ -41,9 +41,23 @@ export default function AgencesPage() {
 
   // Queries
   const { data: agencies = [], isLoading, error } = useQuery<AgencyItem[]>({
-    queryKey: ["agencies-crud"],
-    queryFn: () => apiFetch("/api/v1/agences-crud"),
-    enabled: currentUser?.role === "super_admin",
+    queryKey: ["agencies-page", currentUser?.role],
+    queryFn: async () => {
+      if (currentUser?.role === "super_admin") {
+        return await apiFetch<AgencyItem[]>("/api/v1/agences-crud");
+      } else {
+        const list = await apiFetch<any[]>("/api/v1/pickup-slips/agences");
+        return list.map((a: any) => ({
+          id: a.id,
+          nom: a.nom,
+          adresse: a.adresse || null,
+          telephone: a.telephone || null,
+          responsable: a.responsable || null,
+          actif: a.actif ?? true,
+        }));
+      }
+    },
+    enabled: !!currentUser,
   });
 
   // Create/Update mutations
@@ -143,29 +157,23 @@ export default function AgencesPage() {
     }
   };
 
-  if (currentUser?.role !== "super_admin") {
-    return (
-      <div className="p-8 max-w-7xl mx-auto space-y-8 bg-background text-foreground font-sans">
-        <div className="bg-white border border-hes-red p-8 text-center text-hes-red rounded-lg shadow-sm">
-          <ShieldAlert className="w-10 h-10 mx-auto mb-3 text-hes-red" />
-          <h2 className="font-title font-bold text-sm uppercase tracking-wider">ACCÈS ENRESTREINT</h2>
-          <p className="text-xs font-mono mt-2 text-hes-red">Seuls les administrateurs généraux peuvent gérer les agences du réseau H.E.S.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 bg-background text-foreground font-sans">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6">
         <div>
           <h1 className="text-3xl font-title font-bold text-foreground">Gestion des agences</h1>
-          <p className="text-hes-textMuted text-sm mt-1.5">Création et paramétrage des agences régionales du réseau H.E.S.</p>
+          <p className="text-hes-textMuted text-sm mt-1.5">
+            {currentUser?.role === "super_admin" 
+              ? "Création et paramétrage des agences régionales du réseau H.E.S." 
+              : "Consultation du répertoire des agences régionales H.E.S."}
+          </p>
         </div>
-        <button onClick={openCreateModal} className="primary-btn rounded-md">
-          <Plus className="w-4 h-4" />
-          <span>Créer une agence</span>
-        </button>
+        {currentUser?.role === "super_admin" && (
+          <button onClick={openCreateModal} className="primary-btn rounded-md">
+            <Plus className="w-4 h-4" />
+            <span>Créer une agence</span>
+          </button>
+        )}
       </div>
 
       <div className="hes-ribbon mt-2 mb-6" />
@@ -215,14 +223,18 @@ export default function AgencesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right align-middle">
-                      <div className="flex justify-end gap-3.5">
-                        <button onClick={() => openEditModal(a)} className="p-2 border border-border bg-white hover:bg-slate-50 transition rounded-md text-slate-700" title="Modifier">
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleDelete(a.id, a.nom)} className="p-2 border border-hes-red/30 bg-white hover:bg-hes-red/10 transition rounded-md text-hes-red" title="Supprimer">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      {currentUser?.role === "super_admin" ? (
+                        <div className="flex justify-end gap-3.5">
+                          <button onClick={() => openEditModal(a)} className="p-2 border border-border bg-white hover:bg-slate-50 transition rounded-md text-slate-700" title="Modifier">
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleDelete(a.id, a.nom)} className="p-2 border border-hes-red/30 bg-white hover:bg-hes-red/10 transition rounded-md text-hes-red" title="Supprimer">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-hes-textMuted font-mono">Lecture seule</span>
+                      )}
                     </td>
                   </tr>
                 ))}

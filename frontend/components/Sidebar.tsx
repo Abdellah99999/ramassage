@@ -20,19 +20,15 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useUser();
 
-  const baseLinks = [
+  const links = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/bordereaux", label: "Bordereaux", icon: FileText },
     { href: "/historique", label: "Historique", icon: Search },
     { href: "/impression", label: "Impression", icon: Printer },
     { href: "/chauffeurs", label: "Chauffeurs", icon: Truck },
+    { href: "/agences", label: "Agences", icon: Building2 },
+    { href: "/utilisateurs", label: "Utilisateurs", icon: Users },
   ];
-
-  const links = [...baseLinks];
-  if (user?.role === "super_admin") {
-    links.push({ href: "/agences", label: "Agences", icon: Building2 });
-    links.push({ href: "/utilisateurs", label: "Utilisateurs", icon: Users });
-  }
 
   const roleLabels: Record<string, string> = {
     super_admin: "Super Admin",

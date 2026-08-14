@@ -166,10 +166,12 @@ export default function UtilisateursPage() {
           <p className="text-hes-textMuted text-sm mt-1.5">Contrôle des comptes d'accès managers et agents du réseau H.E.S.</p>
         </div>
 
-        <button onClick={openCreateModal} className="primary-btn rounded-md">
-          <Plus className="w-4 h-4" />
-          <span>Créer un utilisateur</span>
-        </button>
+        {(currentUser?.role === "super_admin" || currentUser?.role === "manager") && (
+          <button onClick={openCreateModal} className="primary-btn rounded-md">
+            <Plus className="w-4 h-4" />
+            <span>Créer un utilisateur</span>
+          </button>
+        )}
       </div>
 
       <div className="hes-ribbon mt-2 mb-6" />

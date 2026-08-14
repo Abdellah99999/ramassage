@@ -9,15 +9,6 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if token cookie exists in browser
-    const hasToken = typeof window !== "undefined" && document.cookie.includes("token=");
-    
-    if (!hasToken) {
-      // Immediate redirect to /login without waiting for API call
-      router.replace("/login");
-      return;
-    }
-
     if (!isLoading) {
       if (user) {
         router.replace("/dashboard");

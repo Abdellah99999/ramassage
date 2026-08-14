@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+const rawBackendUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://127.0.0.1:8000";
+const BACKEND_URL = rawBackendUrl.replace(/\/+$/, "");
 
 async function handleProxy(
   request: NextRequest,
@@ -15,16 +16,19 @@ async function handleProxy(
   const token = cookieStore.get("token")?.value;
   const url = `${BACKEND_URL}/api/v1/${path}${request.nextUrl.search}`;
   
-  const headers = new Headers(request.headers);
-  headers.delete("host");
+  const headers = new Headers();
+  const contentType = request.headers.get("content-type");
+  const accept = request.headers.get("accept");
   
+  if (contentType) headers.set("Content-Type", contentType);
+  if (accept) headers.set("Accept", accept);
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
   
   try {
     const method = request.method;
-    const hasBody = method !== "GET" && method !== "DELETE" && method !== "HEAD";
+    const hasBody = ["POST", "PUT", "PATCH"].includes(method);
     const body = hasBody ? await request.arrayBuffer() : undefined;
 
     const response = await fetch(url, {
@@ -34,9 +38,12 @@ async function handleProxy(
       cache: "no-store",
     });
 
-    const responseHeaders = new Headers(response.headers);
-    responseHeaders.delete("content-encoding");
-    responseHeaders.delete("content-length");
+    const responseHeaders = new Headers();
+    const resContentType = response.headers.get("content-type");
+    const resContentDisp = response.headers.get("content-disposition");
+    
+    if (resContentType) responseHeaders.set("Content-Type", resContentType);
+    if (resContentDisp) responseHeaders.set("Content-Disposition", resContentDisp);
 
     const data = await response.arrayBuffer();
 
