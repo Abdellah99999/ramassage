@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { mockStore } from "../../../../lib/mockData";
+import { HES_LOGO_BASE64 } from "../../../../lib/logoBase64";
 
 export const dynamic = "force-dynamic";
 
@@ -110,7 +111,7 @@ export async function GET(
   </div>
   <div class="page">
     <div class="header">
-      <img src="/logo.png" alt="H.E.S Logo" class="logo" />
+      <img src="${HES_LOGO_BASE64}" alt="H.E.S Logo" class="logo" />
       <div class="title-box">
         <h1>HORIZON EXPRESS SERVICES</h1>
         <h2>BORDEREAU RÉCAPITULATIF DE RAMASSAGE</h2>
@@ -262,7 +263,7 @@ export async function GET(
   </div>
   <div class="page">
     <div class="header">
-      <img src="/logo.png" alt="H.E.S Logo" class="logo" />
+      <img src="${HES_LOGO_BASE64}" alt="H.E.S Logo" class="logo" />
       <div class="title-box">
         <h1>HORIZON EXPRESS SERVICES</h1>
         <h2>BORDEREAU RÉCAPITULATIF DE RAMASSAGE</h2>
