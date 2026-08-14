@@ -53,19 +53,23 @@ export async function GET(
   if (path.startsWith("pickup-slips/") && path.endsWith("/pdf")) {
     const slipId = parseInt(path.split("/")[1]);
     const slip = mockStore.getPickupSlipById(slipId);
+    const driver = slip?.driver;
+    const agency = slip?.agency;
     
-    const pickupsHtml = (slip?.pickups || []).map((p, i) => `
-      <tr style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 8px 10px; font-family: monospace; font-weight: bold;">${p.numero_declaration}</td>
-        <td style="padding: 8px 10px; font-weight: 600;">${p.client_nom}</td>
-        <td style="padding: 8px 10px; color: #475569;">${p.adresse}, ${p.ville}</td>
-        <td style="padding: 8px 10px; text-align: center; font-weight: bold; font-family: monospace;">${p.nombre_colis}</td>
-        <td style="padding: 8px 10px; font-family: monospace; color: #64748b;">${p.date} ${p.heure?.slice(0, 5) || ""}</td>
-        <td style="padding: 8px 10px; border-left: 1px dashed #cbd5e1; height: 35px;"></td>
+    const pickups = slip?.pickups || [];
+    const totalRamassages = pickups.length;
+    const totalColis = pickups.reduce((acc, p) => acc + (p.nombre_colis || 1), 0);
+
+    const rowsHtml = pickups.map((p, idx) => `
+      <tr style="background: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 8px 12px; font-family: monospace; font-size: 12px; font-weight: 600;">${p.numero_declaration}</td>
+        <td style="padding: 8px 12px; font-size: 12px;">${p.client_nom}</td>
+        <td style="padding: 8px 12px; font-size: 12px;">${p.ville}</td>
+        <td style="padding: 8px 12px; font-size: 12px;">${p.date}</td>
+        <td style="padding: 8px 12px; font-size: 12px;">${p.heure?.slice(0, 5) || "09:00"}</td>
+        <td style="padding: 8px 12px; font-size: 12px; text-align: center; font-weight: bold;">${p.nombre_colis}</td>
       </tr>
     `).join("");
-
-    const totalColis = (slip?.pickups || []).reduce((acc, p) => acc + (p.nombre_colis || 1), 0);
 
     const html = `<!DOCTYPE html>
 <html lang="fr">
@@ -73,59 +77,92 @@ export async function GET(
   <meta charset="UTF-8">
   <title>Bordereau ${slip?.numero_bordereau || slipId} - H.E.S.</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 25px; color: #0f172a; background: #f8fafc; }
-    .page { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 20px; }
-    .logo-box { font-size: 22px; font-weight: 900; color: #2563eb; }
-    .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; background: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 12px; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 25px; }
-    th { background: #e2e8f0; padding: 8px 10px; text-align: left; font-size: 11px; text-transform: uppercase; }
-    .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
-    .sig-box { border: 1px solid #cbd5e1; padding: 15px; height: 90px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+    body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 40px 20px; color: #1e293b; background: #525659; }
+    .page { max-width: 780px; margin: 0 auto; background: #fff; padding: 40px 45px; min-height: 1000px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .header { display: flex; align-items: center; gap: 20px; margin-bottom: 12px; }
+    .logo { height: 60px; width: auto; object-fit: contain; }
+    .title-box h1 { font-size: 20px; font-weight: 800; color: #112d4e; margin: 0 0 4px 0; letter-spacing: 0.5px; }
+    .title-box h2 { font-size: 13.5px; font-weight: 700; color: #112d4e; margin: 0; }
+    .divider { height: 2.5px; background-color: #112d4e; width: 100%; margin: 12px 0 20px 0; }
+    .meta-grid { display: flex; justify-content: space-between; margin-bottom: 24px; font-size: 12.5px; line-height: 1.8; color: #334155; }
+    .meta-grid strong { color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12px; }
+    th { background: #112d4e; color: #ffffff; padding: 9px 12px; text-align: left; font-size: 11.5px; font-weight: 700; letter-spacing: 0.3px; }
+    .totals-container { display: flex; justify-content: flex-end; margin-bottom: 35px; }
+    .totals-box { background: #fdfbe8; border: 1px solid #f3ebb8; width: 220px; font-size: 12px; border-collapse: collapse; }
+    .totals-box td { padding: 8px 12px; }
+    .totals-box tr:first-child { border-bottom: 1px solid #f3ebb8; }
+    .totals-box .label { font-weight: 700; color: #1e293b; font-size: 11px; }
+    .totals-box .val { text-align: right; font-weight: 800; font-size: 13px; color: #0f172a; }
+    .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .sig-box { border: 1px solid #cbd5e1; height: 110px; padding: 12px 14px; box-sizing: border-box; }
+    .sig-title { font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+    .sig-sub { font-size: 11px; color: #64748b; }
     .btn-bar { position: fixed; top: 15px; right: 20px; display: flex; gap: 10px; z-index: 999; }
-    .print-btn { background: #2563eb; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    @media print { .btn-bar { display: none; } body { background: #fff; padding: 0; } .page { border: none; box-shadow: none; max-width: 100%; padding: 0; } }
+    .print-btn { background: #112d4e; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 13px; }
+    .print-btn:hover { background: #1e4976; }
+    @media print { .btn-bar { display: none !important; } body { background: #fff !important; padding: 0 !important; } .page { box-shadow: none !important; padding: 20px 0 !important; max-width: 100% !important; } }
   </style>
 </head>
 <body>
   <div class="btn-bar">
-    <button class="print-btn" onclick="window.print()">🖨️ Imprimer / Sauvegarder PDF</button>
+    <button class="print-btn" onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>
   </div>
   <div class="page">
     <div class="header">
-      <div>
-        <div class="logo-box">HORIZON EXPRESS SERVICES</div>
-        <div style="font-size: 11px; color: #64748b; font-family: monospace;">MANIFESTE DE RAMASSAGE OFFICIEL</div>
-      </div>
-      <div style="text-align: right;">
-        <div style="font-size: 16px; font-weight: bold; font-family: monospace;">${slip?.numero_bordereau || `BS-#${slipId}`}</div>
-        <div style="font-size: 11px; color: #64748b;">Statut : <b>${slip?.statut?.toUpperCase() || "EN COURS"}</b></div>
+      <img src="/logo.png" alt="H.E.S Logo" class="logo" />
+      <div class="title-box">
+        <h1>HORIZON EXPRESS SERVICES</h1>
+        <h2>BORDEREAU RÉCAPITULATIF DE RAMASSAGE</h2>
       </div>
     </div>
-    <div class="info-grid">
-      <div><span style="color:#64748b;">Chauffeur:</span><br><b>${slip?.driver?.nom || "Non assigné"}</b></div>
-      <div><span style="color:#64748b;">Agence:</span><br><b>${slip?.agency?.nom || "Agence Centrale"}</b></div>
-      <div><span style="color:#64748b;">Date Tournée:</span><br><b>${slip?.date_tournee || "Aujourd'hui"}</b></div>
-      <div><span style="color:#64748b;">Total Colis:</span><br><b style="color: #2563eb;">${totalColis} colis (${slip?.pickups?.length || 0} ramassages)</b></div>
+    <div class="divider"></div>
+    <div class="meta-grid">
+      <div>
+        <div><strong>Chauffeur :</strong> ${driver?.nom || "Non assigné"}</div>
+        <div><strong>Téléphone :</strong> ${driver ? (mockStore.getDrivers().find(d => d.id === driver.id)?.telephone || "+212 661 00 00") : "98 111 222"}</div>
+      </div>
+      <div>
+        <div><strong>Agence :</strong> ${agency?.nom || "Agence H.E.S. Centrale"}</div>
+        <div><strong>Période :</strong> ${slip?.date_tournee || new Date().toISOString().split("T")[0]}</div>
+      </div>
     </div>
     <table>
       <thead>
         <tr>
           <th>N° BL</th>
           <th>Client</th>
-          <th>Adresse / Ville</th>
+          <th>Ville</th>
+          <th>Date</th>
+          <th>Heure</th>
           <th style="text-align: center;">Colis</th>
-          <th>Date / Heure</th>
-          <th style="text-align: center;">Émargement</th>
         </tr>
       </thead>
       <tbody>
-        ${pickupsHtml || '<tr><td colspan="6" style="text-align:center; padding: 20px;">Aucun colis enregistré dans ce bordereau.</td></tr>'}
+        ${rowsHtml || '<tr><td colspan="6" style="text-align:center; padding: 20px;">Aucun colis enregistré dans ce bordereau.</td></tr>'}
       </tbody>
     </table>
+    <div class="totals-container">
+      <table class="totals-box">
+        <tr>
+          <td class="label">TOTAL RAMASSAGES :</td>
+          <td class="val">${totalRamassages}</td>
+        </tr>
+        <tr>
+          <td class="label">TOTAL COLIS :</td>
+          <td class="val">${totalColis}</td>
+        </tr>
+      </table>
+    </div>
     <div class="signatures">
-      <div class="sig-box">Signature & Émargement Chauffeur :</div>
-      <div class="sig-box">Cachet & Signature Agence H.E.S. :</div>
+      <div class="sig-box">
+        <div class="sig-title">Signature Responsable</div>
+        <div class="sig-sub">Horizon Express Services</div>
+      </div>
+      <div class="sig-box">
+        <div class="sig-title">Signature Chauffeur</div>
+        <div class="sig-sub">Émargement et accord</div>
+      </div>
     </div>
   </div>
 </body>
@@ -133,9 +170,7 @@ export async function GET(
 
     return new NextResponse(html, {
       status: 200,
-      headers: {
-        "Content-Type": "text/html; charset=utf-8"
-      }
+      headers: { "Content-Type": "text/html; charset=utf-8" }
     });
   }
 
@@ -149,7 +184,7 @@ export async function GET(
       slips = slips.filter(s => s.driver_id.toString() === driverIdParam);
     }
 
-    const driver = mockStore.getDrivers().find(d => d.id.toString() === driverIdParam);
+    const driver = mockStore.getDrivers().find(d => d.id.toString() === driverIdParam) || mockStore.getDrivers()[0];
 
     let allPickups: any[] = [];
     slips.forEach(s => {
@@ -158,92 +193,128 @@ export async function GET(
           ...p,
           numero_bordereau: s.numero_bordereau,
           driver_nom: s.driver?.nom || driver?.nom || "Chauffeur",
-          agency_nom: s.agency?.nom || "Agence Centrale"
+          agency_nom: s.agency?.nom || driver?.agency?.nom || "Agence H.E.S."
         });
       });
     });
 
+    const totalRamassages = allPickups.length;
     const totalColis = allPickups.reduce((acc, p) => acc + (p.nombre_colis || 1), 0);
 
-    const rowsHtml = allPickups.map(p => `
-      <tr style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 7px 10px; font-family: monospace; font-weight: bold;">${p.numero_declaration}</td>
-        <td style="padding: 7px 10px; font-family: monospace; font-size: 11px; color: #64748b;">${p.numero_bordereau}</td>
-        <td style="padding: 7px 10px; font-weight: 600;">${p.client_nom}</td>
-        <td style="padding: 7px 10px; color: #475569;">${p.adresse}, ${p.ville}</td>
-        <td style="padding: 7px 10px; text-align: center; font-weight: bold; font-family: monospace;">${p.nombre_colis}</td>
-        <td style="padding: 7px 10px; font-family: monospace; font-size: 11px;">${p.date}</td>
-        <td style="padding: 7px 10px; border-left: 1px dashed #cbd5e1; height: 35px;"></td>
+    const rowsHtml = allPickups.map((p, idx) => `
+      <tr style="background: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 8px 12px; font-family: monospace; font-size: 12px; font-weight: 600;">${p.numero_declaration}</td>
+        <td style="padding: 8px 12px; font-size: 12px;">${p.client_nom}</td>
+        <td style="padding: 8px 12px; font-size: 12px;">${p.ville}</td>
+        <td style="padding: 8px 12px; font-size: 12px;">${p.date}</td>
+        <td style="padding: 8px 12px; font-size: 12px;">${p.heure?.slice(0, 5) || "09:00"}</td>
+        <td style="padding: 8px 12px; font-size: 12px; text-align: center; font-weight: bold;">${p.nombre_colis}</td>
       </tr>
     `).join("");
+
+    const formatFr = (dStr: string) => {
+      if (!dStr) return "";
+      const parts = dStr.split("-");
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return dStr;
+    };
+
+    const periodeText = dateDebutParam && dateFinParam 
+      ? `Du ${formatFr(dateDebutParam)} au ${formatFr(dateFinParam)}`
+      : "Tournée du jour";
 
     const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Feuille d'Émargement H.E.S. - ${driver?.nom || 'Tournée'}</title>
+  <title>Bordereau Récapitulatif - ${driver ? driver.nom : 'H.E.S.'}</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 25px; color: #0f172a; background: #f8fafc; }
-    .page { max-width: 850px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 20px; }
-    .logo-box { font-size: 22px; font-weight: 900; color: #2563eb; }
-    .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; background: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 12px; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 25px; }
-    th { background: #e2e8f0; padding: 8px 10px; text-align: left; font-size: 11px; text-transform: uppercase; }
-    .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
-    .sig-box { border: 1px solid #cbd5e1; padding: 15px; height: 90px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+    body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 40px 20px; color: #1e293b; background: #525659; }
+    .page { max-width: 780px; margin: 0 auto; background: #fff; padding: 40px 45px; min-height: 1000px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .header { display: flex; align-items: center; gap: 20px; margin-bottom: 12px; }
+    .logo { height: 60px; width: auto; object-fit: contain; }
+    .title-box h1 { font-size: 20px; font-weight: 800; color: #112d4e; margin: 0 0 4px 0; letter-spacing: 0.5px; }
+    .title-box h2 { font-size: 13.5px; font-weight: 700; color: #112d4e; margin: 0; }
+    .divider { height: 2.5px; background-color: #112d4e; width: 100%; margin: 12px 0 20px 0; }
+    .meta-grid { display: flex; justify-content: space-between; margin-bottom: 24px; font-size: 12.5px; line-height: 1.8; color: #334155; }
+    .meta-grid strong { color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12px; }
+    th { background: #112d4e; color: #ffffff; padding: 9px 12px; text-align: left; font-size: 11.5px; font-weight: 700; letter-spacing: 0.3px; }
+    .totals-container { display: flex; justify-content: flex-end; margin-bottom: 35px; }
+    .totals-box { background: #fdfbe8; border: 1px solid #f3ebb8; width: 220px; font-size: 12px; border-collapse: collapse; }
+    .totals-box td { padding: 8px 12px; }
+    .totals-box tr:first-child { border-bottom: 1px solid #f3ebb8; }
+    .totals-box .label { font-weight: 700; color: #1e293b; font-size: 11px; }
+    .totals-box .val { text-align: right; font-weight: 800; font-size: 13px; color: #0f172a; }
+    .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .sig-box { border: 1px solid #cbd5e1; height: 110px; padding: 12px 14px; box-sizing: border-box; }
+    .sig-title { font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+    .sig-sub { font-size: 11px; color: #64748b; }
     .btn-bar { position: fixed; top: 15px; right: 20px; display: flex; gap: 10px; z-index: 999; }
-    .print-btn { background: #2563eb; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    @media print { .btn-bar { display: none; } body { background: #fff; padding: 0; } .page { border: none; box-shadow: none; max-width: 100%; padding: 0; } }
+    .print-btn { background: #112d4e; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 13px; }
+    .print-btn:hover { background: #1e4976; }
+    @media print { .btn-bar { display: none !important; } body { background: #fff !important; padding: 0 !important; } .page { box-shadow: none !important; padding: 20px 0 !important; max-width: 100% !important; } }
   </style>
 </head>
 <body>
   <div class="btn-bar">
-    <button class="print-btn" onclick="window.print()">🖨️ Imprimer / Sauvegarder PDF</button>
+    <button class="print-btn" onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>
   </div>
   <div class="page">
     <div class="header">
-      <div>
-        <div class="logo-box">HORIZON EXPRESS SERVICES</div>
-        <div style="font-size: 11px; color: #64748b; font-family: monospace;">FEUILLE D'ÉMARGEMENT & MANIFESTE DE TOURNÉE</div>
-      </div>
-      <div style="text-align: right;">
-        <div style="font-size: 13px; font-weight: bold; font-family: monospace;">DOCUMENT OFFICIEL</div>
-        <div style="font-size: 11px; color: #64748b;">Édité le : ${new Date().toLocaleDateString("fr-FR")}</div>
+      <img src="/logo.png" alt="H.E.S Logo" class="logo" />
+      <div class="title-box">
+        <h1>HORIZON EXPRESS SERVICES</h1>
+        <h2>BORDEREAU RÉCAPITULATIF DE RAMASSAGE</h2>
       </div>
     </div>
-    <div class="info-grid">
-      <div><span style="color:#64748b;">Chauffeur:</span><br><b>${driver ? driver.nom : "Tous les chauffeurs"}</b></div>
-      <div><span style="color:#64748b;">Agence:</span><br><b>${driver?.agency?.nom || "Réseau National"}</b></div>
-      <div><span style="color:#64748b;">Période:</span><br><b>${dateDebutParam || "Début"} au ${dateFinParam || "Aujourd'hui"}</b></div>
-      <div><span style="color:#64748b;">Total Colis:</span><br><b style="color: #2563eb;">${totalColis} colis (${allPickups.length} déclarations)</b></div>
+    <div class="divider"></div>
+    <div class="meta-grid">
+      <div>
+        <div><strong>Chauffeur :</strong> ${driver ? driver.nom : "Kamel Mansour"}</div>
+        <div><strong>Téléphone :</strong> ${driver ? (driver.telephone || "+212 661 10 19") : "98 111 222"}</div>
+      </div>
+      <div>
+        <div><strong>Agence :</strong> ${driver?.agency?.nom || "Agence H.E.S. Centrale"}</div>
+        <div><strong>Période :</strong> ${periodeText}</div>
+      </div>
     </div>
     <table>
       <thead>
         <tr>
           <th>N° BL</th>
-          <th>N° Bordereau</th>
           <th>Client</th>
-          <th>Adresse / Ville</th>
-          <th style="text-align: center;">Colis</th>
+          <th>Ville</th>
           <th>Date</th>
-          <th style="text-align: center;">Émargement Client</th>
+          <th>Heure</th>
+          <th style="text-align: center;">Colis</th>
         </tr>
       </thead>
       <tbody>
-        ${rowsHtml || '<tr><td colspan="7" style="text-align:center; padding: 20px;">Aucun ramassage pour cette sélection.</td></tr>'}
+        ${rowsHtml || '<tr><td colspan="6" style="text-align:center; padding: 20px;">Aucun ramassage trouvé pour cette sélection.</td></tr>'}
       </tbody>
-      <tfoot>
-        <tr style="background: #f1f5f9; font-weight: bold;">
-          <td colspan="4" style="padding: 10px; text-align: right;">TOTAL GÉNÉRAL :</td>
-          <td style="padding: 10px; text-align: center; color: #2563eb;">${totalColis}</td>
-          <td colspan="2" style="padding: 10px; text-align: right; color: #64748b;">${allPickups.length} ramassages</td>
-        </tr>
-      </tfoot>
     </table>
+    <div class="totals-container">
+      <table class="totals-box">
+        <tr>
+          <td class="label">TOTAL RAMASSAGES :</td>
+          <td class="val">${totalRamassages}</td>
+        </tr>
+        <tr>
+          <td class="label">TOTAL COLIS :</td>
+          <td class="val">${totalColis}</td>
+        </tr>
+      </table>
+    </div>
     <div class="signatures">
-      <div class="sig-box">Signature du Chauffeur :</div>
-      <div class="sig-box">Cachet & Signature Agence H.E.S. :</div>
+      <div class="sig-box">
+        <div class="sig-title">Signature Responsable</div>
+        <div class="sig-sub">Horizon Express Services</div>
+      </div>
+      <div class="sig-box">
+        <div class="sig-title">Signature Chauffeur</div>
+        <div class="sig-sub">Émargement et accord</div>
+      </div>
     </div>
   </div>
 </body>
@@ -251,9 +322,7 @@ export async function GET(
 
     return new NextResponse(html, {
       status: 200,
-      headers: {
-        "Content-Type": "text/html; charset=utf-8"
-      }
+      headers: { "Content-Type": "text/html; charset=utf-8" }
     });
   }
 
