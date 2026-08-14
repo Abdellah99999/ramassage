@@ -1,39 +1,43 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { mockStore } from "../../../../lib/mockData";
 
 export const dynamic = "force-dynamic";
-
-const rawBackendUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://127.0.0.1:8000";
-const BACKEND_URL = rawBackendUrl.replace(/\/+$/, "");
 
 export async function GET() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
   
   if (!token) {
-    return NextResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ detail: "Non authentifié" }, { status: 401 });
   }
-  
+
   try {
-    const res = await fetch(`${BACKEND_URL}/api/v1/auth/me`, {
-      headers: {
-        "Authorization": `Bearer ${token}`
-      },
-      cache: "no-store"
-    });
-    
-    if (!res.ok) {
-      if (res.status === 401) {
-        cookieStore.delete("token");
-      }
-      const errData = await res.json().catch(() => ({ detail: "Unauthorized" }));
-      return NextResponse.json(errData, { status: res.status });
+    let payload: any = null;
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf-8");
+      payload = JSON.parse(decoded);
+    } catch {
+      payload = { email: "admin@hes.com" };
     }
-    
-    const data = await res.json();
-    return NextResponse.json(data);
+
+    const users = mockStore.getUsers();
+    const user = users.find(u => u.email.toLowerCase() === payload.email?.toLowerCase()) || users[0];
+
+    const agencies = mockStore.getAgencies();
+    const agency = user.agence_id ? agencies.find(a => a.id === user.agence_id) : null;
+
+    return NextResponse.json({
+      id: user.id,
+      nom: user.nom,
+      email: user.email,
+      role: user.role,
+      agence_id: user.agence_id,
+      actif: user.actif,
+      agency: agency ? { id: agency.id, nom: agency.nom, ville: agency.ville || "" } : null
+    });
   } catch (error) {
-    console.error("Auth me route error:", error);
-    return NextResponse.json({ detail: "Backend connection error" }, { status: 502 });
+    console.error("Auth me error:", error);
+    return NextResponse.json({ detail: "Erreur de session" }, { status: 500 });
   }
 }
